@@ -6,12 +6,17 @@ import json
 from pathlib import Path
 
 CSV_PATH = Path(__file__).parent / "python-app" / "cook_microwaveable_meals.csv"
+SCRAPER_JS_PATH = Path(__file__).parent / "scraper.js"
 OUT_PATH = Path(__file__).parent / "index.html"
 
 with open(CSV_PATH, "r") as f:
     rows = list(csv.DictReader(f))
 
+with open(SCRAPER_JS_PATH, "r", encoding="utf-8") as f:
+    scraper_js = f.read()
+
 data_json = json.dumps(rows, indent=None)
+scraper_js_json = json.dumps(scraper_js)
 
 html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -70,20 +75,21 @@ th .filter-icon:hover{{opacity:.8}}
   <a href="https://github.com/Katnapo/cook-meal-scraper" style="color:#fff;font-size:.78rem;opacity:.8">GitHub</a>
 </header>
 <div class="note">
-  <strong>Static snapshot</strong> &mdash; data scraped from cookfood.net. Prices include any listed discounts. This is an independent tool not affiliated with COOK.
+  <strong>Static snapshot</strong> &mdash; data scraped from cookfood.net. Prices include listed discounts. Not affiliated with COOK.
 </div>
 <div class="run-box">
-  <h3>Run the scraper yourself</h3>
-  <p style="font-size:.75rem;color:#666;margin-bottom:8px">Scraping is rate-limited and at your own risk. Respect the target server.</p>
+  <h3>Scrape fresh data (paste into browser console)</h3>
+  <p style="font-size:.75rem;color:#666;margin-bottom:8px">
+    1. Open <a href="https://www.cookfood.net/menu/special/microwaveable" target="_blank">cookfood.net/menu/special/microwaveable</a><br>
+    2. Press <strong>F12</strong> &rarr; Console tab<br>
+    3. Paste the script below &rarr; Enter<br>
+    4. Wait ~45 seconds for results
+  </p>
   <div class="cmd">
-    <code>git clone https://github.com/Katnapo/cook-meal-scraper.git &amp;&amp; cd cook-meal-scraper\\python-app &amp;&amp; pip install flask requests &amp;&amp; python cook_viewer.py</code>
-    <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+    <code id="browser-snippet" style="white-space:pre-wrap;max-height:120px;overflow-y:auto">Loading snippet...</code>
+    <button class="copy-btn" onclick="copyCmd(this)" id="browser-copy-btn">Copy</button>
   </div>
-  <ul>
-    <li>Opens a local web viewer at <code>http://localhost:8080</code></li>
-    <li>Click <strong>Run Scraper</strong> to pull fresh data from cookfood.net (~45s)</li>
-    <li>Requires Python 3.9+</li>
-  </ul>
+  <p style="font-size:.7rem;color:#999;margin-top:6px">Runs entirely in your browser with no install. Rate-limited (300ms between requests). Use at your own risk.</p>
 </div>
 <div class="toolbar">
   <input type="text" id="search" placeholder="Filter dishes..." oninput="doFilter()">
@@ -218,6 +224,12 @@ function copyCmd(btn){{
     setTimeout(()=>{{ btn.textContent='Copy'; btn.classList.remove('copied'); }},2000);
   }});
 }}
+
+// Inject browser scraper snippet
+document.addEventListener('DOMContentLoaded', () => {{
+  const el = document.getElementById('browser-snippet');
+  if (el) el.textContent = {scraper_js_json};
+}});
 </script>
 </body>
 </html>"""
